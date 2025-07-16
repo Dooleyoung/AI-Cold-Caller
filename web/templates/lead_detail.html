@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lead.name }} - Lead Details{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-user"></i> {{ lead.name }}</h5>
+                <div>
+                    <a href="/leads/{{ lead.id }}/edit" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    {% if lead.status in ['pending', 'called'] %}
+                        <form method="POST" action="/leads/{{ lead.id }}/call" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="fas fa-phone"></i> Start Call
+                            </button>
+                        </form>
+                    {% endif %}
+                    <!-- DELETE BUTTON -->
+                    <form method="POST" action="/leads/{{ lead.id }}/delete" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this lead?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Phone:</strong> {{ lead.phone }}</p>
+                        <p><strong>Email:</strong> {{ lead.email or 'Not provided' }}</p>
+                        <p><strong>Company:</strong> {{ lead.company or 'Not provided' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Title:</strong> {{ lead.title or 'Not provided' }}</p>
+                        <p><strong>Industry:</strong> {{ lead.industry or 'Not provided' }}</p>
+                        <p><strong>Priority:</strong> 
+                            {% for i in range(lead.priority) %}
+                                <i class="fas fa-star text-warning"></i>
+                            {% endfor %}
+                            {% for i in range(4 - lead.priority) %}
+                                <i class="far fa-star text-muted"></i>
+                            {% endfor %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <p><strong>Status:</strong> 
+                            <span class="badge bg-{{ 
+                                'success' if lead.status == 'scheduled' 
+                                else 'primary' if lead.status == 'calling' 
+                                else 'info' if lead.status == 'called'
+                                else 'danger' if lead.status == 'not_interested'
+                                else 'warning' 
+                            }}">
+                                {{ lead.status.replace('_', ' ').title() }}
+                            </span>
+                        </p>
+                        
+                        {% if lead.notes %}
+                            <p><strong>Notes:</strong></p>
+                            <p class="text-muted">{{ lead.notes }}</p>
+                        {% endif %}
+                        
+                        <hr>
+                        <p><strong>Created:</strong> {{ lead.created_at.strftime('%Y-%m-%d %H:%M:%S') if lead.created_at else 'Unknown' }}</p>
+                        {% if lead.last_called %}
+                            <p><strong>Last Called:</strong> {{ lead.last_called.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-phone-alt"></i> Call History</h5>
+            </div>
+            <div class="card-body">
+                {% if call_history %}
+                    {% for call in call_history %}
+                        <div class="border-bottom pb-2 mb-2">
+                            <small class="text-muted">{{ call.called_at.strftime('%Y-%m-%d %H:%M') if call.called_at else 'Unknown' }}</small><br>
+                            <strong>Duration:</strong> 
+                            {% if call.duration %}
+                                {% if call.duration < 60 %}
+                                    {{ call.duration }}s
+                                {% else %}
+                                    {{ (call.duration // 60) }}m {{ (call.duration % 60) }}s
+                                {% endif %}
+                            {% else %}
+                                Unknown
+                            {% endif %}
+                            <br>
+                            <strong>Outcome:</strong> 
+                            <span class="badge bg-{{ 'success' if call.outcome == 'meeting_scheduled' else 'info' if call.outcome == 'answered' else 'warning' }}">
+                                {{ call.outcome.replace('_', ' ').title() if call.outcome else 'Unknown' }}
+                            </span>
+                            {% if call.google_meet_link %}
+                                <br><a href="{{ call.google_meet_link }}" target="_blank" class="btn btn-sm btn-outline-primary mt-1">
+                                    <i class="fas fa-video"></i> Join Meeting
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No calls made yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12">
+        <a href="/leads" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Leads
+        </a>
+    </div>
+</div>
+{% endblock %}

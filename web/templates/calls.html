@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Calls - AI Cold Calling System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h1><i class="fas fa-phone-alt"></i> Call Records</h1>
+        <a href="/export/calls" class="btn btn-outline-success">
+            <i class="fas fa-download"></i> Export CSV
+        </a>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                {% if call_records %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date/Time</th>
+                                    <th>Lead</th>
+                                    <th>Phone</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                    <th>Outcome</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for call in call_records %}
+                                <tr>
+                                    <td>{{ call.called_at.strftime('%Y-%m-%d %H:%M:%S') if call.called_at else 'Unknown' }}</td>
+                                    <td>
+                                        {% if call.lead %}
+                                            <a href="/leads/{{ call.lead_id }}">{{ call.lead.name }}</a>
+                                        {% else %}
+                                            Lead #{{ call.lead_id }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if call.lead %}
+                                            {{ call.lead.phone }}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if call.duration %}
+                                            {% if call.duration < 60 %}
+                                                {{ call.duration }}s
+                                            {% else %}
+                                                {{ (call.duration // 60) }}m {{ (call.duration % 60) }}s
+                                            {% endif %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 
+                                            'success' if call.status == 'completed' 
+                                            else 'primary' if call.status == 'answered'
+                                            else 'warning' if call.status == 'initiated'
+                                            else 'danger' if call.status == 'failed'
+                                            else 'secondary' 
+                                        }}">
+                                            {{ call.status.replace('_', ' ').title() if call.status else 'Unknown' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if call.outcome %}
+                                            <span class="badge bg-{{ 
+                                                'success' if call.outcome == 'meeting_scheduled' 
+                                                else 'info' if call.outcome == 'answered'
+                                                else 'warning' if call.outcome in ['no_answer', 'busy']
+                                                else 'danger' if call.outcome == 'rejected'
+                                                else 'secondary' 
+                                            }}">
+                                                {{ call.outcome.replace('_', ' ').title() }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            {% if call.lead %}
+                                                <a href="/leads/{{ call.lead_id }}" class="btn btn-sm btn-outline-primary" title="View Lead">
+                                                    <i class="fas fa-user"></i>
+                                                </a>
+                                            {% endif %}
+                                            {% if call.google_meet_link %}
+                                                <a href="{{ call.google_meet_link }}" target="_blank" class="btn btn-sm btn-outline-success" title="Join Meeting">
+                                                    <i class="fas fa-video"></i>
+                                                </a>
+                                            {% endif %}
+                                            {% if call.recording_url %}
+                                                <a href="{{ call.recording_url }}" target="_blank" class="btn btn-sm btn-outline-info" title="Listen to Recording">
+                                                    <i class="fas fa-play"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <p class="mb-0">Showing {{ call_records|length }} calls</p>
+                        <!-- Pagination would go here -->
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-phone-alt fa-3x text-muted mb-3"></i>
+                        <h4>No calls made yet</h4>
+                        <p class="text-muted">Call records will appear here once you start making calls to your leads.</p>
+                        <a href="/leads" class="btn btn-primary">
+                            <i class="fas fa-users"></i> View Leads
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

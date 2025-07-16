@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AI Cold Calling System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+    </div>
+</div>
+
+<!-- Key Metrics Row -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ call_stats.total_calls or 0 }}</h4>
+                        <p>Total Calls (30d)</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-phone fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ call_stats.meetings_scheduled or 0 }}</h4>
+                        <p>Meetings Scheduled</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-calendar-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ lead_stats.total_leads or 0 }}</h4>
+                        <p>Total Leads</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ queue_stats.total_pending or 0 }}</h4>
+                        <p>Calls Queued</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Rates Row -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> Performance Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <h3 class="text-success">{{ call_stats.answer_rate or 0 }}%</h3>
+                        <p>Answer Rate</p>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-primary">{{ call_stats.meeting_rate or 0 }}%</h3>
+                        <p>Meeting Rate</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <p><strong>Average Call Duration:</strong> {{ call_stats.avg_call_duration | duration }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-cogs"></i> System Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <p><strong>Scheduler:</strong> 
+                            {% if scheduler_status.running %}
+                                <span class="badge bg-success">Running</span>
+                            {% else %}
+                                <span class="badge bg-danger">Stopped</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Active Calls:</strong> {{ scheduler_status.active_calls or 0 }}</p>
+                    </div>
+                    <div class="col-6">
+                        <p><strong>Queue Health:</strong> 
+                            {% set health = queue_stats.queue_health or 'unknown' %}
+                            {% if health == 'healthy' %}
+                                <span class="badge bg-success">{{ health.title() }}</span>
+                            {% elif health == 'warning' %}
+                                <span class="badge bg-warning">{{ health.title() }}</span>
+                            {% elif health == 'critical' %}
+                                <span class="badge bg-danger">{{ health.title() }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ health.title() }}</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Overdue Calls:</strong> {{ queue_stats.overdue_calls or 0 }}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        {% if not scheduler_status.running %}
+                            <form method="POST" action="{{ url_for('start_scheduler') }}" class="d-inline">
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-play"></i> Start Scheduler
+                                </button>
+                            </form>
+                        {% else %}
+                            <form method="POST" action="{{ url_for('stop_scheduler') }}" class="d-inline">
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-stop"></i> Stop Scheduler
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Row -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-user-plus"></i> Recent Leads</h5>
+                <a href="{{ url_for('new_lead') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> Add Lead
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_leads %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Company</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lead in recent_leads[:5] %}
+                                <tr>
+                                    <td>{{ lead.name }}</td>
+                                    <td>{{ lead.company or '-' }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if lead.status == 'scheduled' else 'warning' if lead.status == 'pending' else 'secondary' }}">
+                                            {{ lead.status.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('lead_detail', lead_id=lead.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center">
+                        <a href="{{ url_for('leads_list') }}" class="btn btn-outline-primary btn-sm">View All Leads</a>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No leads yet. <a href="{{ url_for('new_lead') }}">Add your first lead</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-phone-alt"></i> Recent Calls</h5>
+                <a href="{{ url_for('upload_leads') }}" class="btn btn-success btn-sm">
+                    <i class="fas fa-upload"></i> Import Leads
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_calls %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Duration</th>
+                                    <th>Outcome</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for call in recent_calls[:5] %}
+                                <tr>
+                                    <td>{{ call.called_at | datetime }}</td>
+                                    <td>{{ call.duration | duration }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if call.outcome == 'meeting_scheduled' else 'info' if call.outcome == 'answered' else 'warning' }}">
+                                            {{ call.outcome.replace('_', ' ').title() if call.outcome else 'Unknown' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('lead_detail', lead_id=call.lead_id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center">
+                        <a href="{{ url_for('calls_list') }}" class="btn btn-outline-primary btn-sm">View All Calls</a>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No calls yet. Calls will appear here once you start making them.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('new_lead') }}" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-user-plus"></i><br>Add New Lead
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('upload_leads') }}" class="btn btn-success w-100 mb-2">
+                            <i class="fas fa-upload"></i><br>Import CSV
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('queue_status') }}" class="btn btn-info w-100 mb-2">
+                            <i class="fas fa-list"></i><br>View Queue
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('reports') }}" class="btn btn-warning w-100 mb-2">
+                            <i class="fas fa-chart-bar"></i><br>View Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

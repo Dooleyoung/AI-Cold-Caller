@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Import Leads - AI Cold Calling System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-upload"></i> Import Leads from CSV</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <div class="mb-4">
+                        <label for="file" class="form-label">Choose CSV File</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv" required>
+                        <div class="form-text">
+                            Select a CSV file containing your leads. Maximum file size: 10MB
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="hasHeader" checked>
+                            <label class="form-check-label" for="hasHeader">
+                                File has header row
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('leads_list') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Leads
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Import Leads
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Preview Area -->
+        <div class="card mt-4" id="previewCard" style="display: none;">
+            <div class="card-header">
+                <h5><i class="fas fa-eye"></i> File Preview</h5>
+            </div>
+            <div class="card-body">
+                <div id="previewContent">
+                    <!-- Preview will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> CSV Format</h5>
+            </div>
+            <div class="card-body">
+                <p>Your CSV file should contain the following columns:</p>
+                
+                <h6>Required Columns:</h6>
+                <ul>
+                    <li><code>name</code> - Full name of the lead</li>
+                    <li><code>phone</code> - Phone number</li>
+                </ul>
+                
+                <h6>Optional Columns:</h6>
+                <ul>
+                    <li><code>email</code> - Email address</li>
+                    <li><code>company</code> - Company name</li>
+                    <li><code>title</code> - Job title</li>
+                    <li><code>industry</code> - Industry</li>
+                    <li><code>priority</code> - Priority (1-4)</li>
+                    <li><code>notes</code> - Additional notes</li>
+                </ul>
+                
+                <h6>Example:</h6>
+                <div class="bg-light p-2 rounded">
+                    <small>
+                        <code>
+                        name,phone,email,company<br>
+                        John Doe,+1234567890,john@example.com,Acme Corp<br>
+                        Jane Smith,(555) 123-4567,jane@test.com,Tech Inc
+                        </code>
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="fas fa-download"></i> Sample CSV</h5>
+            </div>
+            <div class="card-body">
+                <p>Download a sample CSV file to see the correct format:</p>
+                <a href="data:text/csv;charset=utf-8,name%2Cphone%2Cemail%2Ccompany%2Ctitle%2Cpriority%0AJohn%20Doe%2C%2B1234567890%2Cjohn%40example.com%2CAcme%20Corp%2CCEO%2C3%0AJane%20Smith%2C%28555%29%20123-4567%2Cjane%40test.com%2CTech%20Inc%2CCTO%2C2" 
+                   download="sample_leads.csv" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-download"></i> Download Sample
+                </a>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5><i class="fas fa-exclamation-triangle"></i> Important Notes</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success"></i> Duplicate phone numbers will be skipped</li>
+                    <li><i class="fas fa-check text-success"></i> Invalid phone numbers will be flagged</li>
+                    <li><i class="fas fa-check text-success"></i> Missing required fields will cause errors</li>
+                    <li><i class="fas fa-check text-success"></i> Import process shows detailed results</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.type === 'text/csv') {
+        // You could add CSV preview functionality here
+        console.log('CSV file selected:', file.name);
+    }
+});
+</script>
+{% endblock %}

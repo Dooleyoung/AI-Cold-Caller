@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  ai-cold-caller:
+    build: .
+    ports:
+      - "5000:5000"  # Dashboard
+      - "5001:5001"  # API
+    environment:
+      - DATABASE_URL=sqlite:///app/data/ai_cold_caller.db
+      - WEBHOOK_BASE_URL=https://your-domain.com
+      - DEBUG=false
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    command: python main.py full
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:

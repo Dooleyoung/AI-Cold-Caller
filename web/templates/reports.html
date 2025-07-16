@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - AI Cold Calling System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-chart-bar"></i> Performance Reports</h1>
+    </div>
+</div>
+
+<!-- Overview Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats_30d.total_calls or 0 }}</h4>
+                        <p>Total Calls (30d)</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-phone fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats_30d.meetings_scheduled or 0 }}</h4>
+                        <p>Meetings Scheduled</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-calendar-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ lead_stats.total_leads or 0 }}</h4>
+                        <p>Total Leads</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats_30d.answer_rate or 0 }}%</h4>
+                        <p>Answer Rate</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-percentage fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Statistics -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> 30-Day Performance</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <h3 class="text-primary">{{ stats_30d.total_calls or 0 }}</h3>
+                        <p>Total Calls</p>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-success">{{ stats_30d.answered_calls or 0 }}</h3>
+                        <p>Answered Calls</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <h3 class="text-info">{{ stats_30d.meetings_scheduled or 0 }}</h3>
+                        <p>Meetings Scheduled</p>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-warning">{{ stats_30d.meeting_rate or 0 }}%</h3>
+                        <p>Meeting Rate</p>
+                    </div>
+                </div>
+                <hr>
+                <p><strong>Average Call Duration:</strong> 
+                    {% if stats_30d.avg_call_duration %}
+                        {% if stats_30d.avg_call_duration < 60 %}
+                            {{ stats_30d.avg_call_duration }}s
+                        {% else %}
+                            {{ (stats_30d.avg_call_duration // 60) }}m {{ (stats_30d.avg_call_duration % 60)|int }}s
+                        {% endif %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie"></i> 7-Day Performance</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <h3 class="text-primary">{{ stats_7d.total_calls or 0 }}</h3>
+                        <p>Total Calls</p>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-success">{{ stats_7d.answered_calls or 0 }}</h3>
+                        <p>Answered Calls</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <h3 class="text-info">{{ stats_7d.meetings_scheduled or 0 }}</h3>
+                        <p>Meetings Scheduled</p>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-warning">{{ stats_7d.meeting_rate or 0 }}%</h3>
+                        <p>Meeting Rate</p>
+                    </div>
+                </div>
+                <hr>
+                <p><strong>Answer Rate:</strong> {{ stats_7d.answer_rate or 0 }}%</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lead Statistics -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-users"></i> Lead Statistics</h5>
+            </div>
+            <div class="card-body">
+                {% if lead_stats.status_breakdown %}
+                    <div class="row">
+                        {% for status, count in lead_stats.status_breakdown.items() %}
+                            <div class="col-md-2">
+                                <div class="text-center">
+                                    <h4 class="text-{{ 
+                                        'success' if status == 'scheduled' 
+                                        else 'primary' if status == 'calling' 
+                                        else 'info' if status == 'called'
+                                        else 'danger' if status == 'not_interested'
+                                        else 'warning' 
+                                    }}">{{ count }}</h4>
+                                    <p class="small">{{ status.replace('_', ' ').title() }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <hr>
+                <div class="row">
+                    <div class="col-md-4">
+                        <p><strong>Total Leads:</strong> {{ lead_stats.total_leads or 0 }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Recent Leads (7d):</strong> {{ lead_stats.recent_leads or 0 }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Conversion Rate:</strong> 
+                            {% if lead_stats.total_leads and stats_30d.meetings_scheduled %}
+                                {{ ((stats_30d.meetings_scheduled / lead_stats.total_leads) * 100)|round(1) }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-download"></i> Export Data</h5>
+            </div>
+            <div class="card-body">
+                <p>Download your data for external analysis:</p>
+                <a href="/export/leads" class="btn btn-primary me-2">
+                    <i class="fas fa-users"></i> Export Leads (CSV)
+                </a>
+                <a href="/export/calls" class="btn btn-success">
+                    <i class="fas fa-phone-alt"></i> Export Calls (CSV)
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
