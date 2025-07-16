@@ -109,6 +109,15 @@ SECRET_KEY=change-this-to-a-random-secret-key
 
 # Database
 DATABASE_URL=sqlite:///ai_cold_caller.db
+
+# Email Configuration
+NOTIFICATION_EMAIL=your-email@gmail.com
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USE_TLS=true
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-new-created-password
+SMTP_FROM_EMAIL=your-email@gmail.com
 ```
 
 ### 2.3 Google Calendar Setup
